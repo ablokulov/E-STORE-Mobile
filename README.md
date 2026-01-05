@@ -218,6 +218,7 @@ POST   /orders/
 GET    /orders/me/
 
 POST   /payments/
+```
 
 ## 8️⃣ QO‘SHIMCHA TALABLAR (PLUS BALL)
 
@@ -278,6 +279,7 @@ cyber_store_api/
 
 ```http
 Authorization: Bearer <access_token>
+```
 
 ## 🛒 PRODUCTS
 
