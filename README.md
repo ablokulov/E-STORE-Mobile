@@ -1,335 +1,417 @@
-# 🛒 PROJECT
+# 🛒 Cyber Store – E-Commerce Backend API
 
-## **Cyber Store – E-Commerce Backend API**
+## 🎯 Maqsad
 
-### 🎯 Maqsad:
-* REST API dizayn
-* Authentication & Authorization (JWT, Permission)
-* Business Logic & Validation
-* Performance (ORM optimizatsiya)
-* E-Commerce flow (Cart, Order, Payment)
-* API hujjatlashtirish
+Ushbu loyiha zamonaviy **e-commerce platforma** uchun yozilgan professional **backend REST API** hisoblanadi.
 
----
+### Asosiy maqsadlar:
 
-## 1️⃣ TEXNOLOGIYALAR (MAJBURIY)
-
-* Python 3.x
-* Django
-* Django Rest Framework (DRF)
-* JWT Authentication (`djangorestframework-simplejwt`)
-* PostgreSQL
-* Swagger / Redoc (`drf-spectacular`)
-* `.env` (environment variables)
-* Git + GitHub (public repository)
+- REST API dizayn (**best practices**)
+- Authentication & Authorization (**JWT**)
+- Business Logic & Validation
+- Performance (**ORM optimizatsiya**)
+- To‘liq e-commerce flow (**Cart → Order → Payment**)
+- Swagger / Redoc bilan hujjatlashtirish
 
 ---
 
-## 2️⃣ FOYDALANUVCHI ROLLARI
+## 1️⃣ Texnologiyalar (Majburiy)
 
-| Role      | Tavsif                                      |
-| --------- | ------------------------------------------- |
-| **Admin** | Tizim va mahsulotlarni boshqaradi           |
-| **User**  | Mahsulot sotib oladi, buyurtma beradi       |
+- **Python 3.12+**
+- **Django**
+- **Django REST Framework (DRF)**
+- **JWT Authentication**  
+  (`djangorestframework-simplejwt`)
+- **PostgreSQL**
+- **Redis** (Cart / Cache)
+- **Swagger / Redoc**  
+  (`drf-spectacular`)
+- **.env** (environment variables)
+- **Git + GitHub** (public repository)
 
 ---
 
-## 3️⃣ MA’LUMOTLAR MODELLARI
+## 2️⃣ Foydalanuvchi Rollari (RBAC)
+
+| Role  | Tavsif |
+|------|-------|
+| **ADMIN** | Tizimni to‘liq boshqaradi (users, products, orders) |
+| **STAFF** | Operator / manager (product va orderlar bilan ishlaydi) |
+| **USER** | Oddiy foydalanuvchi (sotib olish, buyurtma) |
+| **GUEST** | Login qilmagan foydalanuvchi (faqat ko‘rish) |
+
+📌 **Eslatma:**  
+Operator, kontent menejer, support — barchasi backend’da **STAFF** hisoblanadi.
+
+---
+
+## 3️⃣ Ma’lumotlar Modellari
 
 ### 👤 User (Custom User)
 
-```text
-id
-username
-email
-password
-is_active
-created_at
-```
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `email` | Email (unique) |
+| `username` | Username |
+| `role` | USER / STAFF / ADMIN |
+| `is_active` | Boolean |
+| `is_staff` | Boolean |
+| `is_superuser` | Boolean |
+| `created_at` | DateTime |
+
+---
+
+### 👤 Profile
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | OneToOne → User |
+| `first_name` | String |
+| `last_name` | String |
+| `phone` | String |
+
+---
+
+### 🏠 Address
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | ForeignKey → User |
+| `city` | String |
+| `street` | String |
+| `postal_code` | String |
+| `is_default` | Boolean |
+
+
 ### 📦 Category
-```text
-id
-name
-slug
-created_at
-```
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `name` | String |
+| `slug` | Slug (unique) |
+| `created_at` | DateTime |
+
+---
+
 ### 📱 Product
-```
-id
-category (FK)
-name
-brand
-price
-discount_price
-description
-stock
-rating
-created_at
-```
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `category` | ForeignKey → Category |
+| `name` | String |
+| `brand` | String |
+| `price` | Decimal |
+| `discount_price` | Decimal (nullable) |
+| `description` | Text |
+| `stock` | Integer |
+| `rating` | Float |
+| `created_at` | DateTime |
+
+---
+
 ### 🖼 ProductImage
-```
-id
-product (FK)
-image
-```
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `product` | ForeignKey → Product |
+| `image` | ImageField |
+
+---
+
 ### ❤️ Wishlist
-```
-id
-user (FK)
-product (FK)
-created_at
-```
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | ForeignKey → User |
+| `product` | ForeignKey → Product |
+| `created_at` | DateTime |
+
+📌 **Eslatma:**  
+`user + product` kombinatsiyasi **unique** bo‘lishi kerak.
+
+---
+
 ### 🛒 Cart
-```
-id
-user (OneToOne)
-updated_at
-```
+
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | OneToOne → User |
+| `updated_at` | DateTime |
+
+📌 **Eslatma:**  
+Cart ma’lumotlari **Redis** orqali cache qilinadi.
+
+---
+
 ### 🛍 CartItem
-```
-id
-cart (FK)
-product (FK)
-quantity
 
-```
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `cart` | ForeignKey → Cart |
+| `product` | ForeignKey → Product |
+| `quantity` | Integer |
+
+📌 **Eslatma:**  
+`cart + product` kombinatsiyasi **unique** bo‘lishi kerak.
+
+---
+
 ### 📦 Order
-```
-id
-user (FK)
-total_price
-status (pending / paid / cancelled)
-created_at
 
-```
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | ForeignKey → User |
+| `total_price` | Decimal |
+| `status` | pending / paid / cancelled / shipped |
+| `created_at` | DateTime |
+
+---
+
 ### 📦 OrderItem
 
-```
-id
-order (FK)
-product (FK)
-price
-quantity
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `order` | ForeignKey → Order |
+| `product` | ForeignKey → Product |
+| `price` | Decimal |
+| `quantity` | Integer |
 
-```
+---
+
 ### 💳 Payment
 
-```
-id
-order (FK)
-payment_method
-payment_status
-transaction_id
-created_at
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `order` | ForeignKey → Order |
+| `payment_method` | String |
+| `payment_status` | pending / success / failed |
+| `transaction_id` | String |
+| `created_at` | DateTime |
 
-```
-### ⭐ Review
-```
-id
-user (FK)
-product (FK)
-rating (1–5)
-comment
-created_at
+## ⭐ Review
 
-```
-## 4️⃣ FUNKSIONAL TALABLAR
+| Field | Type / Description |
+|------|-------------------|
+| `id` | UUID / Integer |
+| `user` | ForeignKey → User |
+| `product` | ForeignKey → Product |
+| `rating` | Integer (1–5) |
+| `comment` | Text |
+| `created_at` | DateTime |
+
+📌 **Eslatma:**  
+- Review faqat mahsulotni **sotib olgan foydalanuvchi** tomonidan yozilishi mumkin  
+- `user + product` kombinatsiyasi **unique** bo‘lishi mumkin (ixtiyoriy)
+
+---
+
+## 4️⃣ Funksional Talablar
 
 ### 🔐 Authentication & Authorization
 
-- User register  
-- Login  
-- JWT access & refresh token  
-- Protected endpoints  
+- User register
+- Login
+- JWT access & refresh token
+- Role-based permissions (RBAC)
+- Protected endpoints
 
 ---
 
-### 🛒 User imkoniyatlari
+### 🛒 USER imkoniyatlari
 
-- Mahsulotlarni ko‘rish  
-- Filter & search  
-- Savatchaga qo‘shish  
-- Wishlist qo‘shish  
-- Buyurtma berish  
-- To‘lov qilish (mock / stripe-ready)  
-- Review va rating yozish  
+- Mahsulotlarni ko‘rish
+- Filter & search
+- Savatchaga qo‘shish
+- Wishlist (❤️)
+- Buyurtma berish
+- To‘lov qilish (mock / stripe-ready)
+- Review va rating yozish
 
-❌ Boshqa user buyurtmalariga kira olmaydi
-
----
-
-### 🛡 Admin imkoniyatlari
-
-- Category CRUD  
-- Product CRUD  
-- Order management  
-- Payment monitoring  
-- User management  
+❌ **Cheklov:**  
+- Boshqa foydalanuvchilarning buyurtmalariga kira olmaydi
 
 ---
 
-## 5️⃣ BUSINESS LOGIC (ASOSIY BAHOLANADIGAN QISM)
+### 🛡 STAFF imkoniyatlari (Operator)
+
+- Product create / update
+- Order status o‘zgartirish
+- Review moderatsiya
+- Buyurtmalarni ko‘rish
+
+---
+
+### 🛡 ADMIN imkoniyatlari
+
+- Category CRUD
+- Product CRUD
+- Order management
+- Payment monitoring
+- User & role management
+
+---
+
+## 5️⃣ Business Logic (Eng Muhim Qism)
 
 ### ✅ Validation Rules
 
-- ❌ Stock `0` bo‘lsa product buyurtma qilinmaydi  
-- ❌ Cart’da bir product takror qo‘shilmaydi  
-- ✅ Order yaratilganda product stock kamayadi  
-- ❌ Faqat order egasi review yozadi  
-- ❌ Rating `1–5` oralig‘ida bo‘lishi shart  
-- ✅ Payment `paid` bo‘lsa order status `paid`  
+- ❌ Product `stock = 0` bo‘lsa buyurtma qilinmaydi
+- ❌ Cart’da bitta product takror qo‘shilmaydi
+- ✅ Order yaratilganda product `stock` kamayadi
+- ❌ Review faqat order egasi tomonidan yoziladi
+- ❌ Rating faqat **1–5** oralig‘ida bo‘lishi kerak
+- ✅ Payment `paid` bo‘lsa order status `paid` ga o‘zgaradi
 
 ---
 
-## 6️⃣ PERMISSION TALABLARI
+## 6️⃣ Permission Talablari
 
-Custom permission’lar:
+### Custom Permission’lar
 
 - `IsAdmin`
+- `IsStaff`
 - `IsAuthenticated`
 - `IsOwner`
 
-📌 Misollar:
+### 📌 Misollar
 
-- User → faqat **o‘z cart / order**
-- Admin → **hammasi**
+- **USER** → faqat o‘z cart / order / review
+- **STAFF** → product va order management
+- **ADMIN** → tizim bo‘yicha to‘liq ruxsat
+
+## 7️⃣ API Endpoints (Minimum Requirement)
+
+### 🔐 Authentication
+
+| Method | Endpoint | Description |
+|------|---------|-------------|
+| POST | `/api/auth/register/` | User registration |
+| POST | `/api/auth/login/` | User login |
+| POST | `/api/auth/token/refresh/` | JWT refresh token |
 
 ---
 
-## 7️⃣ API ENDPOINTLAR (MINIMUM REQUIREMENT)
+### 📦 Categories & Products
 
-```http
-POST   /auth/register/
-POST   /auth/login/
-POST   /auth/token/refresh/
+| Method | Endpoint | Description |
+|------|---------|-------------|
+| GET | `/api/categories/` | Category list |
+| GET | `/api/products/` | Product list |
+| GET | `/api/products/{id}/` | Product detail |
 
-GET    /categories/
-GET    /products/
-GET    /products/{id}/
+---
 
-POST   /cart/items/
-GET    /cart/
-DELETE /cart/items/{id}/
+### 🛒 Cart
 
-POST   /orders/
-GET    /orders/me/
+| Method | Endpoint | Description |
+|------|---------|-------------|
+| POST | `/api/cart/items/` | Add product to cart |
+| GET | `/api/cart/` | Get user cart |
+| DELETE | `/api/cart/items/{id}/` | Remove cart item |
 
-POST   /payments/
+---
+
+### 📦 Orders
+
+| Method | Endpoint | Description |
+|------|---------|-------------|
+| POST | `/api/orders/` | Create order |
+| GET | `/api/orders/me/` | User orders |
+
+---
+
+### 💳 Payments
+
+| Method | Endpoint | Description |
+|------|---------|-------------|
+| POST | `/api/payments/` | Create payment |
+
+---
+
+## 8️⃣ Qo‘shimcha Talablar (Plus)
+
+### 📄 Pagination
+- Global pagination (DRF)
+- Page size configurable
+
+### 🔍 Filtering
+- `category`
+- `price`
+- `brand`
+
+### 🔎 Search
+- Product name bo‘yicha qidiruv
+
+### ⚙️ Performance & Code Quality
+- Serializer-level validation
+- `select_related` / `prefetch_related`
+- Clean & modular architecture
+- Service layer (business logic ajratish)
+
+---
+
+## 9️⃣ Swagger & README (Majburiy)
+
+### 📘 Swagger / Redoc
+
+- Barcha endpointlar hujjatlashtirilgan
+- Request / Response example’lar mavjud
+
+| Tool | URL |
+|----|----|
+| Swagger UI | `/api/swagger/` |
+| Redoc | `/api/redoc/` |
+
+---
+
+## 📁 Project Structure
 ```
-
-## 8️⃣ QO‘SHIMCHA TALABLAR (PLUS BALL)
-
-- Pagination  
-- Filtering:
-  - category
-  - price
-  - brand  
-- Search:
-  - product name  
-- Serializer validation  
-- `select_related` / `prefetch_related`  
-- Clean architecture  
-
----
-
-## 9️⃣ SWAGGER & README (MAJBURIY)
-
-### Swagger
-
-- Barcha endpointlar hujjatlashtirilgan  
-- Request / Response example’lar  
-
-### README ichida
-
-- Project setup  
-- `.env.example`  
-- Migration & superuser  
-- API’dan foydalanish  
-
----
-
-## 📁 PROJECT STRUCTURE
-```
-
-cyber_store_api/
+E-STORE-Mobile/
 ├── apps/
-│   ├── users/
+│   ├── accounts/
 │   ├── products/
+│   ├── categories/
 │   ├── cart/
 │   ├── orders/
 │   ├── payments/
 │   ├── reviews/
-├── core/
-│   ├── settings.py
+├── config/
+│   ├── settings/
 │   ├── urls.py
+│   └── asgi.py
 ├── .env.example
-├── requirements.txt
+├── requirements/
+├── manage.py
 ├── README.md
 ```
 
+## 🚀 PROJECT SETUP
 
-## 📌 ALL ENDPOINTS (FULL LIST)
+git clone https://github.com/ablokulov/E-STORE-Mobile.git
+cd cyber-store-backend
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements/local.txt
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py runserver
 
-### Base URL
 
-```text
-/api
-### Authentication
-
-```http
-Authorization: Bearer <access_token>
-```
-
-## 🛒 PRODUCTS
-
-| Method | Endpoint            | Description      | Access |
-|------|---------------------|------------------|--------|
-| GET  | `/products/`        | Products list    | Public |
-| GET  | `/products/{id}/`   | Product detail   | Public |
-| POST | `/products/`        | Create product   | Admin  |
-| PATCH| `/products/{id}/`   | Update product   | Admin  |
-| DELETE | `/products/{id}/` | Delete product   | Admin  |
-
----
-
-## 🛒 CART
-
-| Method | Endpoint                | Description      | Access |
-|------|-------------------------|------------------|--------|
-| GET  | `/cart/`                | My cart          | User   |
-| POST | `/cart/items/`          | Add to cart      | User   |
-| DELETE | `/cart/items/{id}/`   | Remove from cart | User   |
-
----
-
-## 📦 ORDERS
-
-| Method | Endpoint      | Description  | Access |
-|------|---------------|--------------|--------|
-| POST | `/orders/`    | Create order | User   |
-| GET  | `/orders/me/` | My orders    | User   |
-| GET  | `/orders/`    | All orders   | Admin  |
-
----
-
-## ⭐ REVIEWS
-
-| Method | Endpoint                  | Description       | Access |
-|------|---------------------------|-------------------|--------|
-| POST | `/products/{id}/reviews/` | Add review        | User   |
-| GET  | `/products/{id}/reviews/` | Product reviews  | Public |
-
----
 
 ## 👨‍💻 Author
 
 **Nodirbek Abloqulov**  
-Backend Developer (Python / Django / DRF)
-
-
-
-
-
-
-
-
+Backend Developer  
+Python / Django / Django REST Framework (DRF)
