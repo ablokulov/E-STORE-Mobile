@@ -3,9 +3,6 @@
 ## **Cyber Store – E-Commerce Backend API**
 
 ### 🎯 Maqsad:
-
-Talabaning **real E-Commerce backend loyiha** ustida ishlash ko‘nikmalarini baholash:
-
 * REST API dizayn
 * Authentication & Authorization (JWT, Permission)
 * Business Logic & Validation
