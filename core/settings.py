@@ -30,12 +30,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'apps.users',
+    'apps.accounts',
     'apps.reviews',
     'apps.products',
     'apps.payments',
     'apps.orders',
     'apps.cart',
+    'apps.categories',
     
     'rest_framework',
     'drf_spectacular',
