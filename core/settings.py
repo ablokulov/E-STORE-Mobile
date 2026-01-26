@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'apps.accounts',
+    'apps.accounts.apps.AccountsConfig',
     'apps.reviews',
     'apps.products',
     'apps.payments',
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'apps.categories',
     
     'rest_framework',
+    'rest_framework_simplejwt',
     'drf_spectacular',
 
 ]
@@ -120,13 +121,26 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+AUTH_USER_MODEL = "accounts.User"
+
 
 REST_FRAMEWORK = {
+     'DEFAULT_AUTHENTICATION_CLASSES': (
+     'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+     
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
     ],
+    
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+
+REST_FRAMEWORK = {
+   
+}
+
 
 
 SPECTACULAR_SETTINGS = {
