@@ -8,21 +8,32 @@ class CustomUserAdmin(UserAdmin):
     model = User
     
     list_display = ("id", "username", "email", "role", "is_staff", "is_active","date_joined","last_login")
-    list_filter = ("role", "is_staff", "is_active","date_joined")
+    list_filter = ("role","is_staff", "is_active","date_joined")
     search_fields = ("username", "email")
 
     fieldsets = UserAdmin.fieldsets + (
         ("Role info", {"fields": ("role",)}),
     )
 
-    add_fieldsets = UserAdmin.add_fieldsets + (
-        ("Role info", {"fields": ("role",)}),
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": (
+                "username",
+                "email",          
+                "password1",
+                "password2",
+                "role",
+            ),
+        }),
     )
 
+    search_fields = ("username", "email")
+    ordering = ("username",)
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "phone")
+    list_display = ("user","first_name","last_name","phone")
     search_fields = ("user__email",)
 
 

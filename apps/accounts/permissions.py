@@ -2,24 +2,23 @@ from rest_framework.permissions import BasePermission
 
 
 class Is_Admin(BasePermission):
-    message = "Siz admin emassz"
+    message = "Siz Admin emassz"
     
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_admin
+        return request.user.is_authenticated and request.user.is_admin_role
     
     
 class Is_Staff(BasePermission):
-    message = "Siz Admin va Operator ham emassz"
+    message = "Siz Staff emas sz"
     
     def has_permission(self, request, view):
-        return (
-        request.user.is_authenticated
-        and request.user.role in ["ADMIN", "STAFF"]
-        )
+        return request.user.is_authenticated and request.user.is_staff_role
     
-    
+ 
+
 class Is_User(BasePermission):
-    message = "Siz user emassz"
+    message = "Siz User emassz"
     
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.is_user
+        return request.user.is_authenticated and request.user.is_user_role
+    
