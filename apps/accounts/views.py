@@ -8,6 +8,9 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from drf_spectacular.utils import extend_schema
+
+
 from .serializers import UserRegisterSerializer, UserSerializer, UserLoginSerializer
 
 class UserRegisterViews(CreateAPIView):
@@ -26,6 +29,25 @@ class UserRegisterViews(CreateAPIView):
     
 class UserLoginViews(APIView):
     permission_classes = [AllowAny]
+    
+    @extend_schema(
+        request=UserLoginSerializer,
+        responses={
+            200: {
+                "type": "object",
+                "properties": {
+                    "tokens": {
+                        "type": "object",
+                        "properties": {
+                            "access": {"type": "string"},
+                            "refresh": {"type": "string"},
+                        }
+                    }
+                }
+            }
+        },
+        auth=[]
+    )
     
     def post(self,request:Request)->Response:
         serializer = UserLoginSerializer(data=request.data)
